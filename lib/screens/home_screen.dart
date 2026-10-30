@@ -4,6 +4,42 @@ import 'package:provider/provider.dart';
 import '../models/product_model.dart';
 import '../providers/product_providers.dart';
 
+// ==================== PALET WARNA PASTEL ====================
+class AppColors {
+  // Background & surface
+  static const Color background = Color(0xFFF5FBFA); // putih kehijauan
+  static const Color surface = Colors.white;
+
+  // Pastel utama
+  static const Color tosca = Color(0xFFB5EAE3);
+  static const Color peach = Color(0xFFFFE0CC);
+  static const Color yellow = Color(0xFFFFF3B8);
+  static const Color mint = Color(0xFFCFF1DF);
+  static const Color sky = Color(0xFFCFE8FF);
+  static const Color lavender = Color(0xFFE0D4FA);
+
+  // Aksen (versi pastel yang lebih pekat agar teks tetap terbaca)
+  static const Color accent = Color(0xFF9F86D9);
+  static const Color accentDark = Color(0xFF7B63BD);
+
+  // Teks
+  static const Color textDark = Color(0xFF4A4458);
+  static const Color textSoft = Color(0xFF8A8497);
+
+  // Garis / border
+  static const Color border = Color(0xFFDCEFEC);
+
+  // Daftar pastel untuk diputar (kartu, chip)
+  static const List<Color> pastels = [
+    tosca,
+    sky,
+    mint,
+    yellow,
+    lavender,
+    peach,
+  ];
+}
+
 // ==================== HALAMAN DETAIL PRODUK ====================
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -22,11 +58,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     if (widget.product.images != null && widget.product.images is List) {
       list = List<String>.from(widget.product.images!);
     }
-
     if (list.isEmpty && widget.product.thumbnail != null) {
       list.add(widget.product.thumbnail!);
     }
-
     if (list.isEmpty) {
       list.add('');
     }
@@ -36,14 +70,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
           widget.product.title ?? 'Detail Produk',
-          style: const TextStyle(fontSize: 16, color: Color(0xFF2C3E50)),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDark,
+          ),
         ),
-        backgroundColor: const Color(0xFFD6E2EC),
-        foregroundColor: const Color(0xFF2C3E50),
+        backgroundColor: AppColors.tosca,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -52,50 +90,60 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           children: [
             // ==================== IMAGE SLIDER ====================
             Container(
-              height: 280,
+              height: 300,
               width: double.infinity,
-              color: const Color(0xFFE9EEF4),
+              decoration: const BoxDecoration(
+                color: AppColors.sky,
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(28),
+                ),
+              ),
               child: Stack(
                 children: [
-                  PageView.builder(
-                    itemCount: _imageList.length,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentImageIndex = index;
-                      });
-                    },
-                    itemBuilder: (context, index) {
-                      return Image.network(
-                        _imageList[index],
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Center(
-                              child: Icon(
-                                Icons.image_outlined,
-                                size: 50,
-                                color: Colors.grey,
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(28),
+                    ),
+                    child: PageView.builder(
+                      itemCount: _imageList.length,
+                      onPageChanged: (index) {
+                        setState(() => _currentImageIndex = index);
+                      },
+                      itemBuilder: (context, index) {
+                        return Image.network(
+                          _imageList[index],
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Center(
+                                child: Icon(
+                                  Icons.image_outlined,
+                                  size: 50,
+                                  color: AppColors.textSoft,
+                                ),
                               ),
-                            ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                   if (_imageList.length > 1)
                     Positioned(
-                      bottom: 12,
+                      bottom: 14,
                       left: 0,
                       right: 0,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: _imageList.asMap().entries.map((entry) {
-                          return Container(
-                            width: _currentImageIndex == entry.key ? 20 : 8,
+                          final active = _currentImageIndex == entry.key;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            width: active ? 22 : 8,
                             height: 8,
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(4),
-                              color: _currentImageIndex == entry.key
-                                  ? const Color(0xFF5C7AEA)
-                                  : const Color(0xFFBAC8E0),
+                              color: active
+                                  ? AppColors.accent
+                                  : Colors.white.withOpacity(0.8),
                             ),
                           );
                         }).toList(),
@@ -109,45 +157,109 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Chip kategori + rating
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.lavender,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          (widget.product.category ?? '')
+                              .toString()
+                              .toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.accentDark,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.yellow,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: Color(0xFFE0A800),
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${widget.product.rating ?? 4.0}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
                   Text(
                     widget.product.title ?? '',
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
+                      color: AppColors.textDark,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '\$${widget.product.price ?? 0}',
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF5C7AEA),
+                      color: AppColors.accentDark,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Divider(color: Color(0xFFD0DCE5)),
+                  const Divider(color: AppColors.border),
                   const SizedBox(height: 16),
                   const Text(
                     'Deskripsi Produk',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
+                      color: AppColors.textDark,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    widget.product.description ??
-                        'Tidak ada deskripsi untuk produk ini.',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF5A6B7C),
-                      height: 1.5,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.mint.withOpacity(0.45),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      widget.product.description ??
+                          'Tidak ada deskripsi untuk produk ini.',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textDark,
+                        height: 1.55,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 90),
                 ],
               ),
             ),
@@ -156,7 +268,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
       bottomSheet: Container(
         padding: const EdgeInsets.all(16),
-        color: const Color(0xFFF4F6F9),
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          border: Border(top: BorderSide(color: AppColors.border)),
+        ),
         child: Row(
           children: [
             Expanded(
@@ -165,21 +280,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Produk dimasukkan ke keranjang!'),
+                      backgroundColor: AppColors.accentDark,
                     ),
                   );
                 },
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFBAC8E0)),
-                  backgroundColor: const Color(0xFFE8EDF5),
+                  side: const BorderSide(color: AppColors.accent),
+                  backgroundColor: AppColors.lavender,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: const Text(
                   '+ Keranjang',
                   style: TextStyle(
-                    color: Color(0xFF2C3E50),
+                    color: AppColors.accentDark,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -190,16 +306,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Menuju halaman checkout...')),
+                    const SnackBar(
+                      content: Text('Menuju halaman checkout...'),
+                      backgroundColor: AppColors.accentDark,
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5C7AEA),
+                  backgroundColor: AppColors.accent,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: const Text(
@@ -246,25 +365,37 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  // Urutkan daftar produk sesuai pilihan dropdown
+  List<Product> _applySort(List<Product> source) {
+    final list = List<Product>.from(source);
+    if (_selectedSort == 'Termurah') {
+      list.sort((a, b) => (a.price ?? 0).compareTo(b.price ?? 0));
+    } else if (_selectedSort == 'Termahal') {
+      list.sort((a, b) => (b.price ?? 0).compareTo(a.price ?? 0));
+    }
+    return list;
+  }
+
   @override
   Widget build(BuildContext context) {
     final productProvider = Provider.of<ProductProvider>(context);
 
-    List<String> categories = ['ALL', ...productProvider.categoryList];
+    final List<String> categories = ['ALL', ...productProvider.categoryList];
+    final List<Product> products = _applySort(productProvider.product);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFFD6E2EC),
+        backgroundColor: AppColors.tosca,
         title: Row(
           children: [
             Container(
-              width: 32,
-              height: 32,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
-                color: const Color(0xFF5C7AEA),
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.accent,
+                borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
                 Icons.shopping_bag,
@@ -279,14 +410,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   'Store App',
                   style: TextStyle(
-                    color: Color(0xFF2C3E50),
+                    color: AppColors.textDark,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   'Koleksi Produk Pilihan',
-                  style: TextStyle(color: Color(0xFF5A6B7C), fontSize: 10),
+                  style: TextStyle(color: AppColors.textSoft, fontSize: 10),
                 ),
               ],
             ),
@@ -296,8 +427,8 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(
               Icons.shopping_bag_outlined,
-              color: Color(0xFF2C3E50),
-              size: 20,
+              color: AppColors.textDark,
+              size: 22,
             ),
             onPressed: () {},
           ),
@@ -306,37 +437,48 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search Bar
+          // ==================== SEARCH BAR ====================
           Container(
-            color: const Color(0xFFD6E2EC),
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            decoration: const BoxDecoration(
+              color: AppColors.tosca,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.accent.withOpacity(0.12),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
               child: TextField(
                 controller: _searchController,
-                style: const TextStyle(color: Color(0xFF2C3E50), fontSize: 14),
+                style: const TextStyle(color: AppColors.textDark, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Cari produk, merek, atau kategori...',
-                  hintStyle: TextStyle(
-                    color: const Color(0xFF2C3E50).withOpacity(0.5),
+                  hintStyle: const TextStyle(
+                    color: AppColors.textSoft,
                     fontSize: 13,
                   ),
-                  prefixIcon: Icon(
+                  prefixIcon: const Icon(
                     Icons.search_rounded,
-                    color: const Color(0xFF2C3E50).withOpacity(0.7),
+                    color: AppColors.accent,
                   ),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(
                             Icons.clear,
-                            color: Color(0xFF2C3E50),
+                            color: AppColors.textSoft,
                             size: 18,
                           ),
                           onPressed: () {
                             _searchController.clear();
+                            setState(() {});
                             productProvider.searchProducts('');
                           },
                         )
@@ -355,10 +497,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Header Kategori & Sort Dropdown
-          Container(
-            color: const Color(0xFFE5ECF2),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          // ==================== HEADER KATEGORI & SORT ====================
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -367,35 +508,34 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
+                    color: AppColors.textDark,
                   ),
                 ),
                 Container(
-                  height: 30,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  height: 32,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFBAC8E0)),
+                    color: AppColors.lavender,
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedSort,
+                      dropdownColor: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
                       icon: const Icon(
                         Icons.swap_vert_rounded,
-                        size: 14,
-                        color: Color(0xFF5C7AEA),
+                        size: 16,
+                        color: AppColors.accentDark,
                       ),
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF2C3E50),
+                        color: AppColors.accentDark,
                       ),
                       onChanged: (String? newValue) {
                         if (newValue != null) {
-                          setState(() {
-                            _selectedSort = newValue;
-                          });
+                          setState(() => _selectedSort = newValue);
                         }
                       },
                       items: <String>['Default', 'Termurah', 'Termahal']
@@ -413,9 +553,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Horizontal Category List
-          Container(
-            color: const Color(0xFFE5ECF2),
+          // ==================== LIST KATEGORI HORIZONTAL ====================
+          SizedBox(
             height: 48,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
@@ -427,30 +566,31 @@ class _HomeScreenState extends State<HomeScreen> {
                     (productProvider.selectedCategory == category) ||
                     (category == 'ALL' &&
                         productProvider.selectedCategory == null);
+                final chipColor =
+                    AppColors.pastels[index % AppColors.pastels.length];
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 4.0,
-                    vertical: 4.0,
+                    vertical: 6.0,
                   ),
                   child: ChoiceChip(
+                    showCheckmark: false,
                     label: Text(category.toUpperCase()),
                     labelStyle: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : const Color(0xFF2C3E50),
+                      color: isSelected ? Colors.white : AppColors.textDark,
                       fontWeight: FontWeight.w600,
                       fontSize: 11,
                     ),
                     selected: isSelected,
-                    selectedColor: const Color(0xFF5C7AEA),
-                    backgroundColor: Colors.white,
+                    selectedColor: AppColors.accent,
+                    backgroundColor: chipColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
                         color: isSelected
-                            ? Colors.transparent
-                            : const Color(0xFFBAC8E0),
+                            ? AppColors.accent
+                            : Colors.transparent,
                       ),
                     ),
                     onSelected: (bool selected) {
@@ -466,9 +606,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
 
-          // Section Header "Daftar Produk"
+          // ==================== HEADER "DAFTAR PRODUK" ====================
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
@@ -482,32 +622,56 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
+                    color: AppColors.textDark,
                   ),
                 ),
-                Text(
-                  '${productProvider.product.length} item',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF5C7AEA),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.mint,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${products.length} item',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          // Grid View Produk
+          // ==================== GRID PRODUK ====================
           Expanded(
             child: productProvider.loading
                 ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF5C7AEA)),
+                    child: CircularProgressIndicator(color: AppColors.accent),
                   )
-                : productProvider.product.isEmpty
+                : products.isEmpty
                 ? const Center(
-                    child: Text(
-                      "Produk tidak ditemukan",
-                      style: TextStyle(color: Color(0xFF7F8C8D), fontSize: 15),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 48,
+                          color: AppColors.textSoft,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Produk tidak ditemukan',
+                          style: TextStyle(
+                            color: AppColors.textSoft,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : GridView.builder(
@@ -519,12 +683,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
-                    itemCount: productProvider.product.length,
+                    itemCount: products.length,
                     itemBuilder: (context, index) {
-                      final product = productProvider.product[index];
+                      final product = products[index];
+                      final imgBg =
+                          AppColors.pastels[index % AppColors.pastels.length];
 
                       return InkWell(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -536,14 +702,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFD6E2EC)),
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.border),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+                                color: AppColors.accent.withOpacity(0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
                               ),
                             ],
                           ),
@@ -556,10 +722,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   children: [
                                     ClipRRect(
                                       borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(12),
+                                        top: Radius.circular(16),
                                       ),
                                       child: Container(
-                                        color: const Color(0xFFF0F4F8),
+                                        color: imgBg,
                                         width: double.infinity,
                                         height: double.infinity,
                                         child: Image.network(
@@ -570,23 +736,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   const Center(
                                                     child: Icon(
                                                       Icons.image_outlined,
-                                                      color: Colors.grey,
+                                                      color: AppColors.textSoft,
                                                     ),
                                                   ),
                                         ),
                                       ),
                                     ),
                                     Positioned(
-                                      top: 6,
-                                      right: 6,
+                                      top: 8,
+                                      right: 8,
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 2,
+                                          horizontal: 7,
+                                          vertical: 3,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF2C3E50)
-                                              .withOpacity(0.8),
+                                          color: AppColors.yellow,
                                           borderRadius: BorderRadius.circular(
                                             10,
                                           ),
@@ -595,15 +760,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             const Icon(
-                                              Icons.star,
-                                              color: Colors.amber,
-                                              size: 10,
+                                              Icons.star_rounded,
+                                              color: Color(0xFFE0A800),
+                                              size: 12,
                                             ),
                                             const SizedBox(width: 2),
                                             Text(
                                               '${product.rating ?? 4.0}',
                                               style: const TextStyle(
-                                                color: Colors.white,
+                                                color: AppColors.textDark,
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -618,7 +783,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Expanded(
                                 flex: 5,
                                 child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.all(10.0),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -638,18 +803,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                             style: const TextStyle(
                                               fontSize: 9,
                                               fontWeight: FontWeight.bold,
-                                              color: Color(0xFF5C7AEA),
+                                              color: AppColors.accent,
                                             ),
                                           ),
-                                          const SizedBox(height: 2),
+                                          const SizedBox(height: 3),
                                           Text(
                                             product.title ?? '',
-                                            maxLines: 1,
+                                            maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
-                                              fontSize: 11,
-                                              color: Color(0xFF2C3E50),
+                                              fontSize: 11.5,
+                                              color: AppColors.textDark,
                                             ),
                                           ),
                                         ],
@@ -661,9 +826,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                           Text(
                                             '\$${product.price ?? 0}',
                                             style: const TextStyle(
-                                              color: Color(0xFF5C7AEA),
+                                              color: AppColors.accentDark,
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 12,
+                                              fontSize: 13,
                                             ),
                                           ),
                                           InkWell(
@@ -675,6 +840,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   content: Text(
                                                     '${product.title} ditambahkan ke keranjang!',
                                                   ),
+                                                  backgroundColor:
+                                                      AppColors.accentDark,
                                                   duration: const Duration(
                                                     seconds: 1,
                                                   ),
@@ -682,9 +849,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                               );
                                             },
                                             child: Container(
-                                              padding: const EdgeInsets.all(4),
+                                              padding: const EdgeInsets.all(5),
                                               decoration: const BoxDecoration(
-                                                color: Color(0xFF5C7AEA),
+                                                color: AppColors.accent,
                                                 shape: BoxShape.circle,
                                               ),
                                               child: const Icon(
