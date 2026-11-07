@@ -13,7 +13,7 @@
 .env
 databases/
 rabbitmq_data/
-htdocs/
+
 migrate_working_dir/
 
 # IntelliJ related
