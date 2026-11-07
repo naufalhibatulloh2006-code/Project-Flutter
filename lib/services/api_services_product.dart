@@ -2,22 +2,33 @@ import 'package:dio/dio.dart';
 
 import '../models/product_model.dart';
 
+import 'dart:convert';
+
 class ApiServiceProducts {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: 'https://dummyjson.com',
+      // Diubah ke URL lokal PHP API via Caddy Docker
+      baseUrl: 'http://192.168.1.10:8090',
+      // Catatan: Jika menggunakan Android Emulator, gunakan 'http://10.0.2.2:8080'
+
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
       headers: {'Content-Type': 'application/json'},
     ),
   );
 
-  // 1. GET ALL PRODUCTS
-  Future<ProductResponse> getAllProducts({int limit = 30, int skip = 0}) async {
-    final res = await _dio.get(
-      '/products',
-      queryParameters: {'limit': limit, 'skip': skip},
-    );
+  // 1. GET ALL PRODUCTS (Mendukung limit, skip, sortBy, order)
+  Future<ProductResponse> getAllProducts({
+    int limit = 0,
+    int skip = 0,
+    String? sortBy,
+    String? order,
+  }) async {
+    Map<String, dynamic> params = {'limit': limit, 'skip': skip};
+    if (sortBy != null) params['sortBy'] = sortBy;
+    if (order != null) params['order'] = order;
+
+    final res = await _dio.get('/products', queryParameters: params);
     return ProductResponse.fromJson(res.data);
   }
 
@@ -66,7 +77,18 @@ class ApiServiceProducts {
   // 7. GET CATEGORY LIST
   Future<List<String>> getCategoryList() async {
     final res = await _dio.get('/products/category-list');
-    return (res.data as List).map((e) => e.toString()).toList();
+    dynamic data = res.data;
+    if (data is String) data = jsonDecode(data);
+    if (data is Map) {
+      data = data['categories'] ?? data['data'] ?? data['category_list'] ?? [];
+    }
+    return (data as List)
+        .map((e) {
+          if (e is Map) return (e['slug'] ?? e['name'] ?? '').toString();
+          return e.toString();
+        })
+        .where((e) => e.isNotEmpty)
+        .toList();
   }
 
   // 8. GET PRODUCTS BY CATEGORY
@@ -75,7 +97,7 @@ class ApiServiceProducts {
     return ProductResponse.fromJson(res.data);
   }
 
-  // 9. ADD PRODUCT (POST)
+  // 9. ADD PRODUCT (POST) -> Sesuai endpoint /products/add di PHP API
   Future<Product> addProduct(Map<String, dynamic> data) async {
     final res = await _dio.post('/products/add', data: data);
     return Product.fromJson(res.data);

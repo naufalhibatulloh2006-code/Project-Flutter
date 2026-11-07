@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: product_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: app
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app_secret
+      MYSQL_ROOT_PASSWORD: root_secret
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3309:3306"
+    volumes:
+      - ./databases:/var/lib/mysql
+
+  php:
+    build: .
+    container_name: product_php
+    restart: always
+    volumes:
+      - ./htdocs:/var/www/html
+    depends_on:
+      - mysql
+
+  caddy:
+    image: caddy:latest
+    container_name: product_caddy
+    restart: always
+    ports:
+      - "8090:80"
+    volumes:
+      - ./htdocs:/var/www/html
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - php
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: product_phpmyadmin
+    restart: always
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root_secret
+    depends_on:
+      - mysql
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: product_rabbitmq
+    restart: always
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - ./rabbitmq_data:/var/lib/rabbitmq

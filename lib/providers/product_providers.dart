@@ -30,9 +30,10 @@ class ProductProvider extends ChangeNotifier {
 
     try {
       final res = await _api.getAllProducts(limit: limit, skip: skip);
-      _products = res.product ?? [];
+      _products = res.products ?? [];
       _total = res.total ?? 0;
       _skip = res.skip ?? 0;
+      if (_categoryList.isEmpty) _buildCategoriesFromProducts();
     } catch (e) {
       _error = e.toString();
     }
@@ -41,14 +42,28 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _buildCategoriesFromProducts() {
+    final set = <String>{};
+    for (final p in _products) {
+      final c = p.category;
+      if (c != null && c.isNotEmpty) set.add(c);
+    }
+    _categoryList = set.toList()..sort();
+  }
+
   Future<void> fetchCategories() async {
     try {
-      _categoryList = await _api.getCategoryList();
-      notifyListeners();
+      final list = await _api.getCategoryList();
+      if (list.isNotEmpty) {
+        _categoryList = list;
+      } else {
+        _buildCategoriesFromProducts();
+      }
     } catch (e) {
-      _error = e.toString();
-      notifyListeners();
+      debugPrint('fetchCategories gagal: $e');
+      _buildCategoriesFromProducts();
     }
+    notifyListeners();
   }
 
   Future<void> searchProducts(String query) async {
@@ -60,7 +75,7 @@ class ProductProvider extends ChangeNotifier {
 
     try {
       final res = await _api.searchProducts(query);
-      _products = res.product ?? [];
+      _products = res.products ?? [];
     } catch (e) {
       _error = e.toString();
     }
@@ -77,7 +92,7 @@ class ProductProvider extends ChangeNotifier {
 
     try {
       final res = await _api.getProductsByCategory(category);
-      _products = res.product ?? [];
+      _products = res.products ?? [];
     } catch (e) {
       _error = e.toString();
     }
@@ -93,7 +108,7 @@ class ProductProvider extends ChangeNotifier {
 
     try {
       final res = await _api.sortProducts(sortBy, order);
-      _products = res.product ?? [];
+      _products = res.products ?? [];
     } catch (e) {
       _error = e.toString();
     }
@@ -122,6 +137,41 @@ class ProductProvider extends ChangeNotifier {
     }
 
     _loading = false;
+    notifyListeners();
+    return success;
+  }
+
+  Future<bool> addProduct(Map<String, dynamic> data) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+
+    bool success = false;
+    try {
+      final created = await _api.addProduct(data);
+      _products.insert(0, created);
+      _total += 1;
+      success = true;
+    } catch (e) {
+      _error = e.toString();
+    }
+
+    _loading = false;
+    notifyListeners();
+    return success;
+  }
+
+  Future<bool> deleteProduct(int id) async {
+    _error = null;
+    bool success = false;
+    try {
+      await _api.deleteProduct(id);
+      _products.removeWhere((p) => p.id == id);
+      _total = _total > 0 ? _total - 1 : 0;
+      success = true;
+    } catch (e) {
+      _error = e.toString();
+    }
     notifyListeners();
     return success;
   }
